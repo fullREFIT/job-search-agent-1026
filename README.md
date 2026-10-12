@@ -17,6 +17,31 @@ Everything candidate-specific has been scrubbed: no resume, no live tracker rows
 | `prompts/research-execution-prompt-template.md` | The execution prompt that produced both runs, as a reusable template with placeholders |
 | `prompts/runner-selection.md` | How to pick which agent runner to execute the research in |
 
+## How to run it
+
+Requirements: Python 3.8 or newer. Standard library only, no installs. Network access to the public ATS APIs.
+
+```
+git clone https://github.com/fullREFIT/job-search-agent-1026.git
+cd job-search-agent-1026
+mkdir run && cd run
+# 1. Edit the slug lists near the top of ../system/sweep-example.py (ash, gh, lv, wk, sr).
+#    Use your own target companies' board slugs.
+python3 ../system/sweep-example.py
+```
+
+The script prints a per-source summary and writes `all.json` (every posting), `kept.json` (postings that pass the title, remote, and recency filters) and `stats.json` (the coverage ledger: one `checked`, `empty`, or `failed:<reason>` per company) into the folder you ran it from. Run it from an empty folder and keep a dated copy of `stats.json` each day, or the ledger gets overwritten.
+
+A slug that returns `failed:HTTP Error 404` is a company that was never checked. Find its real board (try another ATS or a slug variant) or remove it, and note why. Do not count it as coverage.
+
+To run it daily, put the command in any scheduler on a machine with open network access (cron, launchd, a hosted scheduled job). If the machine sleeps, that day has no ledger. Say so in your review instead of reusing yesterday's.
+
+### Included and not included
+
+Included and runnable: the source sweep and coverage ledger (`system/sweep-example.py`).
+
+Described but not included as code: the verification pass (re-reading each employer page for liveness, eligibility, and pay), the decision queue, and the morning review generator (components 4 to 6 in `ARCHITECTURE.md`). Those are specified in `ARCHITECTURE.md` and `system/workflow.md`. You build them against your own tracker.
+
 ## The short version
 
 - Sweep public ATS feeds (Greenhouse, Ashby, Lever, Workable, SmartRecruiters, LinkedIn guest API) and record per-source coverage as checked, empty, or failed. A quiet source is never confused with a broken one, and a failed source never counts as coverage.
